@@ -10,16 +10,16 @@ export const dcQueries = {
   revision:
     "query SalonRevision($id: String!) { salonState(key: {id: $id}) { revision } }",
   insert:
-    "mutation SalonInitialize($id: String!, $payload: String!) { salonState_insert(data: {id: $id, revision: 1, payload: $payload}) { id } }",
+    "mutation SalonInitialize($id: String!, $payload: String!) { salonState_insert(data: {id: $id, revision: 1, payload: $payload}) }",
   commit: `mutation SalonCommit($id: String!, $expected: Int!, $next: Int!, $payload: String!) {
     changed: salonState_updateMany(where: {id: {eq: $id}, revision: {eq: $expected}}, data: {revision: $next, payload: $payload})
   }`,
   session:
     "query SalonSessionRead($id: String!) { salonSession(key: {id: $id}) { expiresAt } }",
   saveSession:
-    "mutation SalonSessionSave($id: String!, $expiresAt: Timestamp!) { salonSession_upsert(data: {id: $id, expiresAt: $expiresAt}) { id } }",
+    "mutation SalonSessionSave($id: String!, $expiresAt: Timestamp!) { salonSession_upsert(data: {id: $id, expiresAt: $expiresAt}) }",
   deleteSession:
-    "mutation SalonSessionDelete($id: String!) { salonSession_delete(key: {id: $id}) { id } }",
+    "mutation SalonSessionDelete($id: String!) { salonSession_delete(key: {id: $id}) }",
 };
 
 export class DataConnectRepository {

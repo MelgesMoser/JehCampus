@@ -12,7 +12,8 @@
     "restart": "node scripts/project.mjs restart",
     "db:check": "node --use-system-ca scripts/check-database.mjs",
     "format": "prettier --write dist server scripts tests *.mjs package.json",
-    "test:database": "node --test tests/mongo.integration.mjs"
+    "test:database": "node --test tests/mongo.integration.mjs",
+    "test:cloud": "node --use-system-ca scripts/test-dataconnect.mjs"
   },
   "dependencies": {
     "google-auth-library": "^10.9.1",
