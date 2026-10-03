@@ -1,0 +1,28 @@
+{
+  "name": "espaco-jeh-campus",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --use-system-ca --watch server.mjs",
+    "start": "node scripts/project.mjs start",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node scripts-check.mjs",
+    "stop": "node scripts/project.mjs stop",
+    "restart": "node scripts/project.mjs restart",
+    "db:check": "node --use-system-ca scripts/check-database.mjs",
+    "format": "prettier --write dist server scripts tests *.mjs package.json",
+    "test:database": "node --test tests/mongo.integration.mjs"
+  },
+  "dependencies": {
+    "google-auth-library": "^10.9.1",
+    "mongodb": "^6.21.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server-core": "^10.4.3",
+    "prettier": "^3.6.2"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  }
+}

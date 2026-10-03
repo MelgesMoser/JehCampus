@@ -1,0 +1,65 @@
+type Service @table {
+  name: String!
+  price: Float!
+  duration: Int!
+  description: String
+  category: String
+  image: String
+  active: Boolean
+}
+
+type Customer @table {
+  name: String!
+  phone: String!
+  email: String
+}
+
+type Appointment @table {
+  startDateTime: Timestamp!
+  status: String!
+  notes: String
+  service: Service!
+  customer: Customer!
+}
+
+type OperatingHour @table {
+  day: Int!
+  open: Boolean!
+  start: String!
+  end: String!
+  setting: Setting!
+}
+
+type Setting @table {
+  name: String!
+  slotInterval: Int!
+  phone: String
+  whatsapp: String
+  instagram: String
+  address: String
+  cancellationPolicy: String
+}
+
+type GalleryItem @table {
+  image: String!
+  description: String
+  category: String
+}
+
+type Block @table {
+  startDateTime: Timestamp!
+  endDateTime: Timestamp!
+  reason: String
+}
+
+# Persistencia versionada do sistema do salao; acesso somente pelo servidor.
+type SalonState @table(key: "id") {
+  id: String!
+  revision: Int!
+  payload: String!
+}
+
+type SalonSession @table(key: "id") {
+  id: String!
+  expiresAt: Timestamp!
+}

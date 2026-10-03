@@ -1,0 +1,14 @@
+{
+  "@type": "type.googleapis.com/google.firebase.dataconnect.v1main.IncompatibleSqlSchemaError",
+  "diffs": [
+    {
+      "sql": "CREATE TABLE \"public\".\"salon_session\" (\"id\" text NOT NULL, \"expires_at\" timestamptz NOT NULL, PRIMARY KEY (\"id\"))",
+      "description": "create \"salon_session\" table"
+    },
+    {
+      "sql": "CREATE TABLE \"public\".\"salon_state\" (\"id\" text NOT NULL, \"payload\" text NOT NULL, \"revision\" integer NOT NULL, PRIMARY KEY (\"id\"))",
+      "description": "create \"salon_state\" table"
+    }
+  ],
+  "violationType": "INCOMPATIBLE_SCHEMA"
+}

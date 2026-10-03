@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: jehcampus-bd-service
+location: southamerica-east1
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: jehcampus-bd-database
+      cloudSql:
+        instanceId: jehcampus-bd-instance
+      schemaValidation: "COMPATIBLE"
+connectorDirs: []

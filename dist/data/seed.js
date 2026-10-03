@@ -1,0 +1,162 @@
+import { dateKey, addDays } from "../utils/format.js";
+export function seed() {
+  const today = dateKey();
+  return {
+    version: 1,
+    services: [
+      {
+        id: "s1",
+        name: "Manicure & pedicure",
+        description:
+          "Um cuidado essencial, com acabamento delicado e atenção a cada detalhe.",
+        category: "Cuidados essenciais",
+        image: "/assets/unhas.png",
+        price: 65,
+        duration: 90,
+        active: true,
+      },
+      {
+        id: "s2",
+        name: "Alongamento em gel",
+        description:
+          "Comprimento, resistência e naturalidade em perfeita harmonia.",
+        category: "Alongamentos",
+        image: "/assets/unhas.png",
+        price: 160,
+        duration: 120,
+        active: true,
+      },
+      {
+        id: "s3",
+        name: "Esmaltação em gel",
+        description:
+          "Cor intensa e brilho duradouro para acompanhar a sua rotina.",
+        category: "Esmaltação",
+        image: "/assets/noiva.png",
+        price: 85,
+        duration: 60,
+        active: true,
+      },
+      {
+        id: "s4",
+        name: "Blindagem / banho de gel",
+        description:
+          "Uma camada de proteção e beleza para suas unhas naturais.",
+        category: "Cuidados essenciais",
+        image: "/assets/unhas.png",
+        price: 110,
+        duration: 90,
+        active: true,
+      },
+      {
+        id: "s5",
+        name: "Spa dos pés",
+        description:
+          "Uma pausa de relaxamento com escalda-pés e cuidado especial.",
+        category: "Bem-estar",
+        image: "/assets/espaco.png",
+        price: 90,
+        duration: 60,
+        active: true,
+      },
+      {
+        id: "s6",
+        name: "Manutenção do gel",
+        description: "Renove o formato e o acabamento das suas unhas.",
+        category: "Alongamentos",
+        image: "/assets/noiva.png",
+        price: 100,
+        duration: 90,
+        active: true,
+      },
+    ],
+    customers: [
+      { id: "c1", name: "Mariana Oliveira", phone: "11999990001" },
+      { id: "c2", name: "Ana Costa", phone: "11999990002" },
+      { id: "c3", name: "Beatriz Santos", phone: "11999990003" },
+    ],
+    appointments: [
+      {
+        id: "a1",
+        customerId: "c1",
+        serviceId: "s1",
+        serviceName: "Manicure & pedicure",
+        price: 65,
+        duration: 90,
+        date: today,
+        time: "10:00",
+        status: "Confirmado",
+        notes: "Registro de demonstração",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "a2",
+        customerId: "c2",
+        serviceId: "s2",
+        serviceName: "Alongamento em gel",
+        price: 160,
+        duration: 120,
+        date: addDays(today, 1),
+        time: "14:00",
+        status: "Agendado",
+        notes: "Registro de demonstração",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "a3",
+        customerId: "c3",
+        serviceId: "s3",
+        serviceName: "Esmaltação em gel",
+        price: 85,
+        duration: 60,
+        date: addDays(today, -1),
+        time: "09:00",
+        status: "Concluído",
+        notes: "Registro de demonstração",
+        createdAt: new Date().toISOString(),
+      },
+    ],
+    blocks: [],
+    gallery: [
+      {
+        id: "g1",
+        image: "/assets/unhas.png",
+        description: "A delicadeza dos tons rosados",
+        category: "Alongamentos",
+      },
+      {
+        id: "g2",
+        image: "/assets/noiva.png",
+        description: "Um detalhe para o seu grande dia",
+        category: "Noivas",
+      },
+      {
+        id: "g3",
+        image: "/assets/espaco.png",
+        description: "Um espaço pensado para acolher",
+        category: "Nosso espaço",
+      },
+    ],
+    settings: {
+      name: "Espaço Jeh Campus",
+      logo: "",
+      phone: "",
+      whatsapp: "",
+      instagram: "espaco_jehcampus",
+      address:
+        "Av. Pref. Hirant Sanazar, 1597 (antigo 38) · Jardim Oriental · Osasco/SP · CEP 06033-255",
+      cancellationPolicy:
+        "Se precisar cancelar ou reagendar, entre em contato com pelo menos 24 horas de antecedência.",
+      slotInterval: 30,
+      hours: [
+        { day: 0, open: false, start: "09:00", end: "18:00" },
+        { day: 1, open: true, start: "09:00", end: "18:00" },
+        { day: 2, open: true, start: "09:00", end: "18:00" },
+        { day: 3, open: true, start: "09:00", end: "18:00" },
+        { day: 4, open: true, start: "09:00", end: "18:00" },
+        { day: 5, open: true, start: "09:00", end: "18:00" },
+        { day: 6, open: true, start: "09:00", end: "17:00" },
+      ],
+    },
+  };
+}
