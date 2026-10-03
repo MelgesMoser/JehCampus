@@ -33,7 +33,7 @@ try {
   const message = error.name?.startsWith("Mongo")
     ? error.code === 18
       ? "O banco recusou o usuário ou a senha. Confira as credenciais SCRAM."
-      : "Não foi possível acessar o banco. Confira rede, credenciais e permissões de leitura/escrita no Google Cloud."
+      : "Não foi possível acessar o banco. Confira rede, credenciais e permissões de leitura/escrita do MongoDB."
     : error.message;
   console.error(message);
   process.exitCode = 1;

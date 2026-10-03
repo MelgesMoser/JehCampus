@@ -56,6 +56,7 @@ export class RemoteServices {
     this.connectionState = connectionState;
     this.listeners = new Set();
     this.authenticated = false;
+    this.customer = null;
     this.sequence = 0;
     this.bookingKeys = new Map();
     for (const operation of [
@@ -96,8 +97,13 @@ export class RemoteServices {
       .catch(() => ({ error: "Resposta inesperada do servidor." }));
     if (!response.ok) {
       if (response.status >= 500) this.setConnected(false);
-      if (response.status === 401 && !path.includes("/auth/login")) {
+      if (
+        response.status === 401 &&
+        !path.includes("/auth/login") &&
+        !path.startsWith("/api/customer/")
+      ) {
         this.authenticated = false;
+        this.customer = null;
         if (this.state) {
           this.state.customers = [];
           this.state.appointments = [];
@@ -132,10 +138,14 @@ export class RemoteServices {
     const response = await this.request("/api/snapshot" + params);
     if (sequence !== this.sequence) return;
     this.authenticated = response.authenticated;
+    const customerChanged =
+      JSON.stringify(this.customer) !==
+      JSON.stringify(response.customer || null);
+    this.customer = response.customer || null;
     if (!response.unchanged) {
       this.state = response.snapshot;
       this.emit();
-    }
+    } else if (customerChanged) this.emit();
   }
 
   startSync() {
@@ -198,6 +208,19 @@ export class RemoteServices {
 
   async login(credentials) {
     await this.request("/api/auth/login", credentials);
+    await this.refresh(true);
+  }
+  async customerLogin(credentials, register = false) {
+    const response = await this.request(
+      "/api/customer/" + (register ? "register" : "login"),
+      credentials,
+    );
+    this.customer = response.customer;
+    await this.refresh(true);
+  }
+  async customerLogout() {
+    await this.request("/api/customer/logout", {});
+    this.customer = null;
     await this.refresh(true);
   }
   async logout() {

@@ -44,6 +44,7 @@ export class MongoRepository {
       "meta",
       "sessions",
       "requests",
+      "private",
     ]) {
       try {
         await this.db.createCollection(`${this.config.prefix}_${name}`);
@@ -195,5 +196,22 @@ export class MongoRepository {
   }
   async close() {
     await this.client.close();
+  }
+  async getPrivateRecord(key) {
+    return (
+      (await this.collection("private").findOne({ _id: key }))?.value || null
+    );
+  }
+  async createPrivateRecord(key, value) {
+    try {
+      await this.collection("private").insertOne({ _id: key, value });
+      return true;
+    } catch (error) {
+      if (error.code === 11000) return false;
+      throw error;
+    }
+  }
+  async deletePrivateRecord(key) {
+    await this.collection("private").deleteOne({ _id: key });
   }
 }

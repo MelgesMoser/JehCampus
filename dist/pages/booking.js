@@ -2,6 +2,10 @@ import { api, connectionState } from "../services/index.js";
 import { brand, toast } from "../components/ui.js";
 import { calendar, shiftMonth } from "../components/calendar.js";
 import {
+  customerLoginView,
+  bindCustomerLogin,
+} from "../components/customerLogin.js";
+import {
   dateKey,
   dateLabel,
   money,
@@ -28,6 +32,10 @@ export function resetBooking() {
 }
 export function renderBooking() {
   if (!state) resetBooking();
+  if (api.customer) {
+    state.name = api.customer.name;
+    state.phone = api.customer.phone;
+  }
   const db = api.getSnapshot(),
     s = db.settings,
     service = db.services.find((x) => x.id === state.serviceId && x.active);
@@ -41,6 +49,7 @@ export function renderBooking() {
   bind(db, service);
 }
 function stepView(db, service) {
+  if (state.step >= 3 && !api.customer) return customerLoginView();
   switch (state.step) {
     case 0:
       return `<div class="booking-services">${
@@ -72,6 +81,16 @@ function successView(a) {
   return `<section class="booking-success"><div class="success-mark">✓</div><p class="eyebrow">SEU MOMENTO ESTÁ RESERVADO</p><h1>Agendamento realizado<br><em>com sucesso!</em></h1><p>Esperamos por você para um momento de cuidado.</p><div class="success-ticket"><h3>${esc(a.serviceName)}</h3><p>${dateLabel(a.date)} · ${a.time}</p><p>${a.duration} minutos · ${money(a.price)}</p><small>Reserva ${a.id.slice(0, 8).toUpperCase()} · Agendado</small></div><p class="helper">Salve estas informações. O comprovante do seu agendamento está nesta página.</p><a href="/" class="button">Voltar ao início</a><button id="another-booking" class="button secondary">Agendar outro cuidado</button></section>`;
 }
 function bind(db, service) {
+  bindCustomerLogin(() => {
+    state.step = 3;
+    renderBooking();
+  }, renderBooking);
+  if (api.customer) {
+    for (const name of ["name", "phone"]) {
+      const input = document.querySelector(`#customer-form [name="${name}"]`);
+      if (input) input.readOnly = true;
+    }
+  }
   document.querySelectorAll("[data-service]").forEach(
     (el) =>
       (el.onclick = () => {
@@ -132,8 +151,8 @@ function bind(db, service) {
         state.success = await api.createAppointment(state);
         renderBooking();
       } catch (e) {
-        document.querySelector("#booking-error").innerHTML =
-          `<p class="error">${esc(e.message)}</p>`;
+        const error = document.querySelector("#booking-error");
+        if (error) error.innerHTML = `<p class="error">${esc(e.message)}</p>`;
         confirm.disabled = false;
         confirm.textContent = "Confirmar agendamento";
       }

@@ -5,6 +5,7 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 import { HttpError, validateOperation, publicSnapshot } from "./validation.mjs";
+import { customerAuth } from "./customerAuth.mjs";
 
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const cookieName = "jeh_admin_session";
@@ -76,6 +77,7 @@ export function createApi({ config, getRepository }) {
     );
   }
 
+  const customers = customerAuth({ config, send, readBody, limit });
   return async function handleApi(req, res, url) {
     if (!url.pathname.startsWith("/api/")) return false;
     try {
@@ -116,6 +118,7 @@ export function createApi({ config, getRepository }) {
         );
       }
 
+      if (await customers.handle(req, res, url, repository)) return true;
       if (url.pathname === "/api/auth/login" && req.method === "POST") {
         limit(req, "login", 8);
         const body = await readBody(req);
@@ -152,18 +155,20 @@ export function createApi({ config, getRepository }) {
       }
 
       const authenticated = await signedIn(req, repository);
+      const customer = await customers.current(req, repository);
       if (url.pathname === "/api/snapshot" && req.method === "GET") {
         if (
           url.searchParams.get("revision") ===
             String(await repository.revision()) &&
           url.searchParams.get("scope") === (authenticated ? "admin" : "public")
         ) {
-          send(res, 200, { unchanged: true, authenticated });
+          send(res, 200, { unchanged: true, authenticated, customer });
           return true;
         }
         const state = await repository.snapshot();
         send(res, 200, {
           authenticated,
+          customer,
           snapshot: authenticated ? state : publicSnapshot(state),
         });
         return true;
@@ -174,11 +179,21 @@ export function createApi({ config, getRepository }) {
           throw new HttpError(400, "Operação inválida.");
         if (!authenticated && body.operation !== "createAppointment")
           throw new HttpError(401, "Entre no painel para continuar.");
+        if (!authenticated && !customer)
+          throw new HttpError(
+            401,
+            "Entre na sua conta para confirmar o agendamento.",
+          );
         const args = validateOperation(body.operation, body.args);
         if (!authenticated) {
           limit(req, "booking", 30);
           // Public clients cannot set status, customer IDs, price, or duration.
-          args[0] = { ...args[0], status: "Agendado" };
+          args[0] = {
+            ...args[0],
+            name: customer.name,
+            phone: customer.phone,
+            status: "Agendado",
+          };
         }
         let requestKey;
         if (body.operation === "createAppointment") {

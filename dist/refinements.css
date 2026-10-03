@@ -636,3 +636,5 @@ body.sidebar-open {
     padding: 0;
   }
 }
+
+.customer-account-page{max-width:560px;margin:40px auto;padding:32px}.customer-access h3{font-size:1.6rem}.customer-access #switch-customer-access{margin-top:22px;min-height:44px}.customer-account-page .button{margin:12px 8px 0 0}input[readonly]{background:#f4f0ea;color:#655e53}@media(max-width:600px){.customer-account-page{margin:20px 14px;padding:24px}}

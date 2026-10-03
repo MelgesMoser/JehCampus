@@ -1,6 +1,7 @@
 import { api, initializeData, connectionState } from "./services/index.js";
 import { auth } from "./services/auth.js";
 import { home } from "./pages/home.js";
+import { renderCustomerAccount } from "./pages/customerAccount.js";
 import { renderBooking, resetBooking } from "./pages/booking.js";
 import { renderAdmin } from "./admin/index.js";
 import { watchStore } from "./hooks/store.js";
@@ -17,6 +18,7 @@ function render() {
   try {
     if (location.pathname.startsWith("/admin")) renderAdmin();
     else if (location.pathname === "/agendar") renderBooking();
+    else if (location.pathname === "/entrar") renderCustomerAccount();
     else if (location.pathname === "/") {
       const db = api.getSnapshot();
       document.title = db.settings.name + " · Beleza com propósito";
@@ -87,6 +89,8 @@ async function start() {
         return;
       }
       if (
+        document.querySelector("#customer-access-form") ||
+        document.querySelector("#admin-login-form") ||
         document.querySelector("#customer-form") ||
         (document
           .querySelector("#settings-form")

@@ -64,9 +64,9 @@ export function loadConfig(env = process.env) {
       }
       config.uri = `mongodb://${encodeURIComponent(env.MONGODB_USERNAME)}:${encodeURIComponent(env.MONGODB_PASSWORD)}@${env.MONGODB_HOST}/${encodeURIComponent(config.database)}?loadBalanced=true&tls=true&authMechanism=SCRAM-SHA-256&retryWrites=false`;
     }
-    if (!config.uri.startsWith("mongodb://"))
+    if (!/^mongodb(?:\+srv)?:\/\//.test(config.uri))
       throw new Error(
-        "Use uma conexão mongodb:// compatível com o banco informado.",
+        "Use uma conexão mongodb:// ou mongodb+srv:// válida.",
       );
   }
   if (

@@ -1,3 +1,11 @@
+# Banco ativo: MongoDB Atlas
+
+O sistema usa atualmente o Atlas (`cluster0.sufeslm.mongodb.net`), banco `jeh_campus`. Os dados foram migrados do Data Connect e a origem foi preservada. Use o painel para gerenciar os dados. O backend inicializa bancos vazios automaticamente; não execute o script legado de Firestore neste banco. A conexão e a senha ficam somente no `.env` privado.
+
+Verificação: `npm run db:check`. Mais detalhes no README principal.
+
+## Documentação da integração anterior
+
 # Banco do salão
 
 A integração atual usa **Firebase Data Connect / PostgreSQL**, no projeto `jehcampus-bd`, serviço `jehcampus-bd-service`, em `southamerica-east1`.

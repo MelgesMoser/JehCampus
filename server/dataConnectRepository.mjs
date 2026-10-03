@@ -141,4 +141,33 @@ export class DataConnectRepository {
     });
   }
   async close() {}
+  privateId(key) {
+    return `${this.stateId}:private:${key}`;
+  }
+  async getPrivateRecord(key) {
+    const result = await this.transport.execute(
+      dcQueries.read,
+      { id: this.privateId(key) },
+      true,
+    );
+    return result.salonState ? JSON.parse(result.salonState.payload) : null;
+  }
+  async createPrivateRecord(key, value) {
+    try {
+      await this.transport.execute(dcQueries.insert, {
+        id: this.privateId(key),
+        payload: JSON.stringify(value),
+      });
+      return true;
+    } catch (error) {
+      if (await this.getPrivateRecord(key)) return false;
+      throw error;
+    }
+  }
+  async deletePrivateRecord(key) {
+    await this.transport.execute(
+      "mutation DeletePrivate($id:String!){salonState_delete(key:{id:$id})}",
+      { id: this.privateId(key) },
+    );
+  }
 }
