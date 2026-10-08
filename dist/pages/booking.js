@@ -1,3 +1,4 @@
+import { selectedService } from "../services/selection.js";
 import { api, connectionState } from "../services/index.js";
 import { brand, toast } from "../components/ui.js";
 import { calendar, shiftMonth } from "../components/calendar.js";
@@ -18,8 +19,8 @@ let state;
 export function resetBooking() {
   const selected = new URLSearchParams(location.search).get("servico");
   state = {
-    step: selected ? 1 : 0,
-    serviceId: selected || "",
+    step: 0,
+    serviceIds: selected ? [selected] : [],
     month: dateKey().slice(0, 7),
     date: "",
     time: "",
@@ -38,10 +39,12 @@ export function renderBooking() {
   }
   const db = api.getSnapshot(),
     s = db.settings,
-    service = db.services.find((x) => x.id === state.serviceId && x.active);
-  if (!service && !state.success) {
+    service = selectedService(db, state.serviceIds);
+  if ((!service || !service.active) && !state.success) {
     state.step = 0;
-    state.serviceId = "";
+    state.serviceIds = [];
+    state.date = "";
+    state.time = "";
   }
   const steps = ["Serviço", "Data", "Horário", "Dados", "Confirmação"];
   document.querySelector("#app").innerHTML =
@@ -57,18 +60,18 @@ function stepView(db, service) {
           .filter((x) => x.active)
           .map(
             (x) =>
-              `<button class="booking-service" data-service="${x.id}"><img src="${imageSrc(x.image)}" alt=""><span><small>${esc(x.category)}</small><strong>${esc(x.name)}</strong><small>${x.duration} minutos</small></span><b>${money(x.price)}</b></button>`,
+              `<button class="booking-service ${state.serviceIds.includes(x.id) ? "selected" : ""}" aria-pressed="${state.serviceIds.includes(x.id)}" data-service="${x.id}"><img src="${imageSrc(x.image)}" alt=""><span><small>${esc(x.category)}</small><strong>${esc(x.name)}</strong><small>${x.duration} minutos</small></span><b>${money(x.price)}</b></button>`,
           )
           .join("") ||
         "<p>Em breve teremos novos horários. Entre em contato pelo Instagram.</p>"
-      }</div>`;
+      }</div><p class="helper">Selecione um ou mais serviços. Somaremos os valores e o tempo de atendimento.</p><button class="button" id="continue-services" ${!service ? "disabled" : ""}>Continuar${service ? ` · ${money(service.price)} · ${service.duration} min` : ""}</button>`;
     case 1:
       return (
         calendar(state.month, state.date, db, service) +
         '<p class="helper">Datas indisponíveis aparecem desabilitadas.</p>'
       );
     case 2: {
-      const slots = api.getAvailableSlots(service.id, state.date);
+      const slots = api.getAvailableSlots(state.serviceIds, state.date);
       return `<p class="date-heading">${dateLabel(state.date)} · ${service.duration} minutos</p><div class="slots">${slots.map((t) => `<button data-time="${t}" class="slot">${t}</button>`).join("")}</div>${!slots.length ? '<div class="empty"><h3>Sem horários disponíveis neste dia</h3><p>Escolha outra data para encontrar seu momento.</p></div>' : '<p class="helper">Horários já consideram a duração do serviço.</p>'}`;
     }
     case 3:
@@ -94,13 +97,20 @@ function bind(db, service) {
   document.querySelectorAll("[data-service]").forEach(
     (el) =>
       (el.onclick = () => {
-        state.serviceId = el.dataset.service;
-        state.step = 1;
+        state.serviceIds = state.serviceIds.includes(el.dataset.service)
+          ? state.serviceIds.filter((id) => id !== el.dataset.service)
+          : [...state.serviceIds, el.dataset.service];
         state.date = "";
         state.time = "";
         renderBooking();
       }),
   );
+  const next = document.querySelector("#continue-services");
+  if (next)
+    next.onclick = () => {
+      state.step = 1;
+      renderBooking();
+    };
   document.querySelectorAll("[data-month]").forEach(
     (el) =>
       (el.onclick = () => {

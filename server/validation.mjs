@@ -14,7 +14,7 @@ const fields = {
     "duration",
     "active",
   ],
-  booking: ["name", "phone", "serviceId", "date", "time", "notes", "status"],
+  booking: ["name", "phone", "serviceId", "serviceIds", "date", "time", "notes", "status"],
   block: ["reason", "startDate", "endDate", "startTime", "endTime", "allDay"],
   gallery: ["image", "description", "category"],
   settings: [
@@ -65,7 +65,9 @@ export function validateOperation(operation, args) {
     for (const [key, entry] of Object.entries(value)) {
       if (!fields[kind].includes(key))
         throw new HttpError(400, "Campo não permitido.");
-      if (key === "hours") {
+      if (key === "serviceIds") {
+        if (!Array.isArray(entry) || !entry.length || entry.length > 20 || new Set(entry).size !== entry.length || entry.some(id => typeof id !== "string" || !/^[a-zA-Z0-9-]{1,80}$/.test(id))) throw new HttpError(400, "Selecione serviços válidos, sem repetições.");
+      } else if (key === "hours") {
         if (!Array.isArray(entry) || entry.length !== 7)
           throw new HttpError(400, "Informe os sete dias da semana.");
         entry.forEach((hour, day) => {

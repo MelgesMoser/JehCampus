@@ -1,3 +1,4 @@
+import { createAdmin, verifyAdmin } from "./adminAccounts.mjs";
 import {
   randomBytes,
   createHash,
@@ -31,12 +32,18 @@ export function createApi({ config, getRepository }) {
       .find((x) => x.startsWith(cookieName + "="))
       ?.slice(cookieName.length + 1) || "";
   const cookie = (token, expires = 28800) =>
-    `${cookieName}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${expires}${config.origin?.startsWith("https://") ? "; Secure" : ""}`;
+    `${cookieName}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${expires}${config.vercel || config.origin?.startsWith("https://") ? "; Secure" : ""}`;
 
   function limit(req, group, max) {
     const now = Date.now(),
-      key = group + ":" + req.socket.remoteAddress;
-    // Bounded, expiring in-process abuse protection; never trust forwarded IPs.
+      key =
+        group +
+        ":" +
+        (config.vercel
+          ? req.headers["x-vercel-forwarded-for"] || req.socket.remoteAddress
+          : req.socket.remoteAddress);
+    // Trust Vercel's overwritten IP header only inside the Vercel runtime.
+    // This bounded per-instance limiter complements the hosting firewall.
     for (const [id, value] of attempts)
       if (value.until < now) attempts.delete(id);
     if (!attempts.has(key)) {
@@ -55,6 +62,17 @@ export function createApi({ config, getRepository }) {
   }
 
   async function readBody(req) {
+    if (req.body !== undefined) {
+      const raw =
+        typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+      if (Buffer.byteLength(raw) > 3000000)
+        throw new HttpError(413, "Formulário muito grande.");
+      try {
+        return JSON.parse(raw);
+      } catch {
+        throw new HttpError(400, "JSON inválido.");
+      }
+    }
     let size = 0;
     const chunks = [];
     for await (const chunk of req) {
@@ -85,7 +103,11 @@ export function createApi({ config, getRepository }) {
         throw new HttpError(405, "Método não permitido.");
       if (req.method === "POST") {
         const origin = config.origin || `http://${req.headers.host}`;
-        if (req.headers.origin !== origin)
+        if (
+          !(
+            config.allowedOrigins?.length ? config.allowedOrigins : [origin]
+          ).includes(req.headers.origin)
+        )
           throw new HttpError(403, "Origem não permitida.");
         if (!req.headers["content-type"]?.startsWith("application/json"))
           throw new HttpError(415, "Envie dados em JSON.");
@@ -133,7 +155,10 @@ export function createApi({ config, getRepository }) {
           scryptSync(body.password, salt, 64),
           passwordHash,
         );
-        if (!validPassword || body.username !== config.username)
+        if (
+          !(validPassword && body.username === config.username) &&
+          !(await verifyAdmin(repository, body.username, body.password))
+        )
           throw new HttpError(401, "Usuário ou senha incorretos.");
         const token = randomBytes(32).toString("hex");
         const oldToken = tokenFrom(req);
@@ -155,6 +180,21 @@ export function createApi({ config, getRepository }) {
       }
 
       const authenticated = await signedIn(req, repository);
+      if (url.pathname === "/api/admin/accounts" && req.method === "POST") {
+        if (!authenticated)
+          throw new HttpError(
+            401,
+            "Entre como administrador para criar outro administrador.",
+          );
+        limit(req, "create-admin", 20);
+        const account = await createAdmin(
+          repository,
+          await readBody(req),
+          config.username,
+        );
+        send(res, 201, { account });
+        return true;
+      }
       const customer = await customers.current(req, repository);
       if (url.pathname === "/api/snapshot" && req.method === "GET") {
         if (

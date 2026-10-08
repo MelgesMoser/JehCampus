@@ -13,9 +13,11 @@
     "db:check": "node --use-system-ca scripts/check-database.mjs",
     "format": "prettier --write dist server scripts tests *.mjs package.json",
     "test:database": "node --test tests/mongo.integration.mjs",
-    "test:cloud": "node --use-system-ca scripts/test-dataconnect.mjs"
+    "test:cloud": "node --use-system-ca scripts/test-dataconnect.mjs",
+    "deploy:vercel": "node --use-system-ca scripts/deploy-vercel.mjs"
   },
   "dependencies": {
+    "@vercel/functions": "^3.9.11",
     "google-auth-library": "^10.9.1",
     "mongodb": "^6.21.0"
   },

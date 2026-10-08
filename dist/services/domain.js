@@ -1,3 +1,4 @@
+import { selectedService, bookingIds, sameSelection } from "./selection.js";
 import {
   available,
   availableSlots,
@@ -47,28 +48,18 @@ export function createServices(repository) {
     return item;
   };
   const saveBooking = (db, v, existing) => {
-    const stored = db.services.find((s) => s.id === v.serviceId);
-    const service =
-      stored ||
-      (existing?.serviceId === v.serviceId
-        ? {
-            id: existing.serviceId,
-            name: existing.serviceName,
-            price: existing.price,
-            duration: existing.duration,
-            active: false,
-          }
-        : null);
+    const ids = bookingIds(v);
+    const service = selectedService(db, ids, existing);
     if (!service) throw Error("Serviço não encontrado.");
     const profile = validateCustomer(v);
     const status = v.status || existing?.status || "Agendado";
     if (!STATUSES.includes(status)) throw Error("Status inválido.");
     const unchanged =
       existing &&
-      existing.serviceId === v.serviceId &&
+      sameSelection(bookingIds(existing), ids) &&
       existing.date === v.date &&
       existing.time === v.time;
-    const sameService = existing && existing.serviceId === v.serviceId;
+    const sameService = existing && sameSelection(bookingIds(existing), ids);
     const snapshot = sameService
       ? {
           ...service,
@@ -97,6 +88,7 @@ export function createServices(repository) {
       id: existing?.id || id(),
       customerId: customer.id,
       serviceId: service.id,
+      serviceIds: ids,
       serviceName: sameService ? existing.serviceName : service.name,
       price: sameService ? existing.price : service.price,
       duration: sameService ? existing.duration : service.duration,
@@ -132,7 +124,7 @@ export function createServices(repository) {
         if (
           db.appointments.some(
             (a) =>
-              a.serviceId === key &&
+              bookingIds(a).includes(key) &&
               a.date >= dateKey() &&
               occupies(a) &&
               a.status !== "Concluído",
@@ -148,10 +140,8 @@ export function createServices(repository) {
     getCustomers: () => read().customers,
     getAvailableSlots: (serviceId, date, excludeId) => {
       const db = read();
-      let service = db.services.find((s) => s.id === serviceId);
       const old = db.appointments.find((a) => a.id === excludeId);
-      if (old?.serviceId === serviceId)
-        service = { ...service, duration: old.duration };
+      const service = selectedService(db, serviceId, old);
       return availableSlots(db, service, date, excludeId);
     },
     createAppointment: (v) =>
@@ -162,7 +152,14 @@ export function createServices(repository) {
         const c = find(db, "customers", old.customerId);
         return saveBooking(
           db,
-          { ...old, name: c.name, phone: c.phone, ...v },
+          {
+            ...old,
+            name: c.name,
+            phone: c.phone,
+            ...v,
+            serviceIds:
+              v.serviceIds ?? (v.serviceId ? [v.serviceId] : bookingIds(old)),
+          },
           old,
         );
       }),

@@ -10,6 +10,13 @@ export function loadConfig(env = process.env) {
     host: env.HOST || "127.0.0.1",
     port: Number(env.PORT || 4173),
     origin: env.PUBLIC_ORIGIN || "",
+    vercel: env.VERCEL === "1",
+    allowedOrigins: [
+      env.PUBLIC_ORIGIN,
+      ...[env.VERCEL_URL, env.VERCEL_PROJECT_PRODUCTION_URL]
+        .filter(Boolean)
+        .map((host) => `https://${host}`),
+    ].filter(Boolean),
     username: env.ADMIN_USERNAME || "admin",
     password: env.ADMIN_PASSWORD || "",
     prefix: env.MONGODB_COLLECTION_PREFIX || "jeh_campus",
@@ -65,9 +72,7 @@ export function loadConfig(env = process.env) {
       config.uri = `mongodb://${encodeURIComponent(env.MONGODB_USERNAME)}:${encodeURIComponent(env.MONGODB_PASSWORD)}@${env.MONGODB_HOST}/${encodeURIComponent(config.database)}?loadBalanced=true&tls=true&authMechanism=SCRAM-SHA-256&retryWrites=false`;
     }
     if (!/^mongodb(?:\+srv)?:\/\//.test(config.uri))
-      throw new Error(
-        "Use uma conexão mongodb:// ou mongodb+srv:// válida.",
-      );
+      throw new Error("Use uma conexão mongodb:// ou mongodb+srv:// válida.");
   }
   if (
     !["127.0.0.1", "localhost", "::1"].includes(config.host) &&

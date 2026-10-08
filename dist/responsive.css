@@ -1,0 +1,50 @@
+.booking-service.selected {
+  border: 2px solid #99783e;
+  background: #f5eddd;
+}
+.service-checks {
+  border: 1px solid #ddd0bb;
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+.service-checks legend {
+  padding: 0 8px;
+}
+#continue-services {
+  width: 100%;
+  margin-top: 16px;
+}
+
+@media (max-width: 480px) {
+  .admin-topbar {
+    gap: 10px;
+  }
+  .admin-topbar > div:not(.topbar-right) {
+    min-width: 0;
+    flex: 1;
+  }
+  .admin-topbar h1 {
+    font-size: 22px;
+    overflow-wrap: normal;
+  }
+  .topbar-right {
+    flex: none;
+  }
+  .topbar-right [data-new-appointment] {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 10px;
+  }
+  .topbar-right [data-new-appointment] span {
+    display: none;
+  }
+  .service-checks {
+    min-width: 0;
+  }
+  .service-checks label {
+    align-items: flex-start;
+  }
+}

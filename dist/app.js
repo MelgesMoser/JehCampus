@@ -92,6 +92,7 @@ async function start() {
         document.querySelector("#customer-access-form") ||
         document.querySelector("#admin-login-form") ||
         document.querySelector("#customer-form") ||
+        document.querySelector("#admin-create-form") ||
         (document
           .querySelector("#settings-form")
           ?.contains(document.activeElement) &&

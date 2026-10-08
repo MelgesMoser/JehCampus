@@ -1,3 +1,4 @@
+import { attachDatabasePool } from "@vercel/functions";
 import { MongoClient } from "mongodb";
 import { seed } from "../dist/data/seed.js";
 import { createServices } from "../dist/services/domain.js";
@@ -26,8 +27,10 @@ export class MongoRepository {
         connectTimeoutMS: 10000,
         socketTimeoutMS: 20000,
         maxPoolSize: 10,
+        maxIdleTimeMS: 5000,
         appName: "Espaco-Jeh-Campus",
       });
+    if (process.env.VERCEL) attachDatabasePool(this.client);
     this.db = this.client.db(config.database);
   }
 

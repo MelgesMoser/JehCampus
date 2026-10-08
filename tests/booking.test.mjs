@@ -30,6 +30,34 @@ const booking = (v = {}) => ({
   phone: "11988887777",
   ...v,
 });
+test("vários serviços somam duração/valor, impedem sobreposição e preservam totais ao reagendar", async () => {
+  const { api } = fixture();
+  const selected = api.getServices().filter((s) => ["s1", "s3"].includes(s.id));
+  const a = await api.createAppointment(booking({ serviceIds: ["s1", "s3"] }));
+  assert.equal(
+    a.duration,
+    selected.reduce((n, s) => n + s.duration, 0),
+  );
+  assert.equal(
+    a.price,
+    selected.reduce((n, s) => n + s.price, 0),
+  );
+  assert.deepEqual(a.serviceIds, ["s1", "s3"]);
+  await assert.rejects(
+    api.createAppointment(booking({ time: "12:00" })),
+    /disponível/,
+  );
+  await assert.rejects(api.deleteService("s3"), /futuros/);
+  await api.updateService("s3", { price: 999, duration: 180 });
+  const moved = await api.updateAppointment(a.id, { time: "13:00" });
+  assert.equal(moved.price, a.price);
+  assert.equal(moved.duration, a.duration);
+  assert.deepEqual(moved.serviceIds, a.serviceIds);
+  await assert.rejects(
+    api.createAppointment(booking({ serviceIds: ["s1", "s1"] })),
+    /encontrado/,
+  );
+});
 test("reserva de 90 minutos bloqueia toda sobreposição, preservando a fronteira 11:30", async () => {
   const { api } = fixture();
   await api.createAppointment(booking());

@@ -23,7 +23,7 @@ const tokenFrom = (req) =>
 
 export function customerAuth({ config, send, readBody, limit }) {
   const cookie = (token, maxAge = 28800) =>
-    `${cookieName}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${config.origin?.startsWith("https://") ? "; Secure" : ""}`;
+    `${cookieName}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${config.vercel || config.origin?.startsWith("https://") ? "; Secure" : ""}`;
   async function current(req, repository) {
     const token = tokenFrom(req);
     if (!/^[a-f0-9]{64}$/.test(token)) return null;

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MongoMemoryReplSet } from 'mongodb-memory-server-core';
 import { MongoRepository } from '../server/mongoRepository.mjs';
+import { createAdmin, verifyAdmin } from '../server/adminAccounts.mjs';
 
 test('MongoDB real: persistência, transações concorrentes e rollback', { timeout: 180000 }, async t => {
   const replica = await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine: 'wiredTiger' } });
@@ -11,6 +12,12 @@ test('MongoDB real: persistência, transações concorrentes e rollback', { time
   const date = '2099-10-20';
   const booking = { name: 'Teste isolado', phone: '11977778888', serviceId: 's1', date, time: '10:00' };
   try {
+    await t.test('administradores persistem no MongoDB e podem entrar por outra conexão', async () => {
+      await createAdmin(first, {name:'Administradora teste',username:'gestora',password:'senha-teste-segura-123'}, 'admin');
+      assert.equal(await verifyAdmin(second,'gestora','senha-teste-segura-123'),true);
+      assert.equal(await verifyAdmin(second,'gestora','incorreta'),false);
+      await assert.rejects(createAdmin(second,{name:'Duplicada',username:'gestora',password:'outra-senha-teste-123'},'admin'), /já existe/);
+    });
     await t.test('banco inicializado sem clientes ou atendimentos fictícios', async () => {
       const snapshot = await first.snapshot();
       assert.equal(snapshot.customers.length, 0);

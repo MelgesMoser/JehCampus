@@ -1,3 +1,4 @@
+import { selectedService } from "./selection.js";
 import { availableSlots } from "./availability.js";
 
 const mutationFields = {
@@ -19,11 +20,20 @@ const mutationFields = {
     "duration",
     "active",
   ],
-  createAppointment: ["name", "phone", "serviceId", "date", "time", "notes"],
+  createAppointment: [
+    "name",
+    "phone",
+    "serviceId",
+    "serviceIds",
+    "date",
+    "time",
+    "notes",
+  ],
   updateAppointment: [
     "name",
     "phone",
     "serviceId",
+    "serviceIds",
     "date",
     "time",
     "notes",
@@ -177,11 +187,8 @@ export class RemoteServices {
   }
   getAvailableSlots(serviceId, date, excludeId) {
     const state = this.getSnapshot();
-    let service = state.services.find((item) => item.id === serviceId);
-    const previous =
-      excludeId && state.appointments.find((item) => item.id === excludeId);
-    if (previous?.serviceId === serviceId)
-      service = { ...service, duration: previous.duration };
+    const previous = state.appointments.find((item) => item.id === excludeId);
+    const service = selectedService(state, serviceId, previous);
     return availableSlots(state, service, date, excludeId);
   }
 

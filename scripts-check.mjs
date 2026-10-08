@@ -17,7 +17,10 @@ async function scan(dir) {
 }
 await scan("dist");
 await scan("server");
-await scan("scripts");
+await scan("scripts").catch((error) => {
+  if (error.code !== "ENOENT") throw error;
+});
+await scan("api");
 const main = spawnSync(process.execPath, ["--check", "server.mjs"], {
   encoding: "utf8",
 });

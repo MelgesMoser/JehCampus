@@ -1,0 +1,11 @@
+.git
+.env*
+.run
+.vercel
+node_modules
+tests
+preview
+scripts
+*.zip
+*.cmd
+ACESSO-ADMIN.txt

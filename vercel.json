@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "npm run check",
+  "outputDirectory": "dist",
+  "regions": ["gru1"],
+  "functions": { "api/handler.mjs": { "maxDuration": 60 } },
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/handler" },
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/admin/:page((?!.*\\.).*)", "destination": "/index.html" },
+    { "source": "/agendar", "destination": "/index.html" },
+    { "source": "/entrar", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
+}

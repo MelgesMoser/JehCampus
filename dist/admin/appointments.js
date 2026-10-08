@@ -1,3 +1,4 @@
+import { bookingIds, sameSelection } from "../services/selection.js";
 import { api } from "../services/index.js";
 import { STATUSES } from "../services/availability.js";
 import {
@@ -101,17 +102,27 @@ export function confirmAction(title, text, action) {
 export function appointmentForm(a = null) {
   const db = api.getSnapshot(),
     c = db.customers.find((c) => c.id === a?.customerId),
-    services = db.services.filter((s) => s.active || s.id === a?.serviceId);
+    services = db.services.filter(
+      (s) => s.active || (a && bookingIds(a).includes(s.id)),
+    );
   modal(
     a ? "Editar / Reagendar" : "Novo agendamento",
-    `<form id="appointment-form"><div id="form-error" role="alert"></div><div class="form-grid">${field("Nome da cliente", "name", c?.name || "", "text", 'required minlength="2" maxlength="100"')}${field("WhatsApp com DDD", "phone", c?.phone || "", "tel", "required")}<label class="full">Serviço<select name="serviceId" required><option value="">Selecione o serviço</option>${services.map((s) => `<option value="${s.id}" ${s.id === a?.serviceId ? "selected" : ""}>${esc(s.name)} · ${s.duration} min · ${money(s.price)}${!s.active ? " (inativo)" : ""}</option>`).join("")}</select></label>${field("Data", "date", a?.date || dateKey(), "date", "required")}<label>Horário<select name="time" required><option value="">Selecione serviço e data</option></select></label><label class="full">Observações<textarea name="notes" maxlength="1000">${esc(a?.notes)}</textarea></label><p class="helper full">A disponibilidade será conferida novamente ao salvar. O valor e a duração de reservas existentes são preservados ao reagendar o mesmo serviço.</p></div><div class="form-actions"><button type="button" class="button secondary" data-abort>Voltar</button><button class="button" type="submit">${a ? "Salvar alterações" : "Criar agendamento"}</button></div></form>`,
+    `<form id="appointment-form"><div id="form-error" role="alert"></div><div class="form-grid">${field("Nome da cliente", "name", c?.name || "", "text", 'required minlength="2" maxlength="100"')}${field("WhatsApp com DDD", "phone", c?.phone || "", "tel", "required")}<fieldset class="full service-checks"><legend>Serviços — selecione um ou mais</legend>${services.map((s) => `<label class="checkbox-label"><input type="checkbox" name="serviceIds" value="${s.id}" ${a && bookingIds(a).includes(s.id) ? "checked" : ""}>${esc(s.name)} · ${s.duration} min · ${money(s.price)}</label>`).join("")}</fieldset>${field("Data", "date", a?.date || dateKey(), "date", "required")}<label>Horário<select name="time" required><option value="">Selecione serviço e data</option></select></label><label class="full">Observações<textarea name="notes" maxlength="1000">${esc(a?.notes)}</textarea></label><p class="helper full">A disponibilidade será conferida novamente ao salvar. O valor e a duração de reservas existentes são preservados ao reagendar o mesmo serviço.</p></div><div class="form-actions"><button type="button" class="button secondary" data-abort>Voltar</button><button class="button" type="submit">${a ? "Salvar alterações" : "Criar agendamento"}</button></div></form>`,
   );
   const form = document.querySelector("#appointment-form");
   const update = () => {
-    const svc = form.elements.serviceId.value,
+    const svc = [...form.querySelectorAll('[name="serviceIds"]:checked')].map(
+        (input) => input.value,
+      ),
       date = form.elements.date.value;
-    let slots = svc && date ? api.getAvailableSlots(svc, date, a?.id) : [];
-    if (a && a.date === date && a.serviceId === svc && !slots.includes(a.time))
+    let slots =
+      svc.length && date ? api.getAvailableSlots(svc, date, a?.id) : [];
+    if (
+      a &&
+      a.date === date &&
+      sameSelection(bookingIds(a), svc) &&
+      !slots.includes(a.time)
+    )
       slots = [a.time, ...slots].sort();
     form.elements.time.innerHTML = slots.length
       ? '<option value="">Escolha um horário</option>' +
@@ -122,7 +133,9 @@ export function appointmentForm(a = null) {
           .join("")
       : '<option value="">Sem horários disponíveis</option>';
   };
-  form.elements.serviceId.onchange = update;
+  form
+    .querySelectorAll('[name="serviceIds"]')
+    .forEach((input) => (input.onchange = update));
   form.elements.date.onchange = update;
   update();
   form.querySelector("[data-abort]").onclick = closeModal;
@@ -131,7 +144,11 @@ export function appointmentForm(a = null) {
     const button = form.querySelector("[type=submit]");
     button.disabled = true;
     try {
-      const v = Object.fromEntries(new FormData(form));
+      const data = new FormData(form);
+      const v = {
+        ...Object.fromEntries(data),
+        serviceIds: data.getAll("serviceIds"),
+      };
       if (a) await api.updateAppointment(a.id, v);
       else await api.createAppointment(v);
       closeModal();

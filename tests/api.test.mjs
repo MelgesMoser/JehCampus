@@ -126,6 +126,53 @@ const booking = {
   time: "10:00",
   notes: "Observação privada",
 };
+test("administradores criam outros administradores; clientes não podem criar e senhas ficam protegidas", async () => {
+  const t = await setup();
+  try {
+    const account = {
+      name: "Admin teste",
+      username: "gestora",
+      password: "senha-segura-teste-123",
+    };
+    assert.equal((await t.post("/api/admin/accounts", account)).status, 401);
+    const cookie = await t.login();
+    const created = await t.post("/api/admin/accounts", account, cookie);
+    assert.equal(created.status, 201);
+    assert.ok(!JSON.stringify(await created.json()).includes("password"));
+    assert.equal(
+      (await t.post("/api/admin/accounts", account, cookie)).status,
+      409,
+    );
+    assert.equal(
+      (
+        await t.post("/api/auth/login", {
+          username: account.username,
+          password: "incorreta",
+        })
+      ).status,
+      401,
+    );
+    const login = await t.post("/api/auth/login", account);
+    assert.equal(login.status, 200);
+    const secondCookie = login.headers.get("set-cookie").split(";")[0];
+    assert.equal(
+      (
+        await t.post(
+          "/api/admin/accounts",
+          { ...account, username: "outra.admin" },
+          secondCookie,
+        )
+      ).status,
+      201,
+    );
+    assert.notEqual(
+      t.repository.privateRecords.get("admin:gestora").passwordHash,
+      account.password,
+    );
+  } finally {
+    await t.close();
+  }
+});
 
 test("contas de cliente exigem senha, não concedem acesso admin e não expõem hashes", async () => {
   const app = await setup();
@@ -439,10 +486,16 @@ test("configuração monta URI SCRAM com caracteres de senha codificados e rejei
   );
 });
 
-test('configuração aceita Atlas SRV sem opções exclusivas do Firestore',()=>{
-  const uri='mongodb+srv://test:example@cluster.example.mongodb.net/?appName=Test';
-  const config=loadConfig({DATA_MODE:'mongodb',ADMIN_PASSWORD:'test-password-123',MONGODB_URI:uri,MONGODB_DATABASE:'jeh_campus'});
-  assert.equal(config.uri,uri);
-  assert.equal(config.database,'jeh_campus');
-  assert.ok(!config.uri.includes('loadBalanced=true'));
+test("configuração aceita Atlas SRV sem opções exclusivas do Firestore", () => {
+  const uri =
+    "mongodb+srv://test:example@cluster.example.mongodb.net/?appName=Test";
+  const config = loadConfig({
+    DATA_MODE: "mongodb",
+    ADMIN_PASSWORD: "test-password-123",
+    MONGODB_URI: uri,
+    MONGODB_DATABASE: "jeh_campus",
+  });
+  assert.equal(config.uri, uri);
+  assert.equal(config.database, "jeh_campus");
+  assert.ok(!config.uri.includes("loadBalanced=true"));
 });
