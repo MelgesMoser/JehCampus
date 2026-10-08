@@ -9,3 +9,4 @@ scripts
 *.zip
 *.cmd
 ACESSO-ADMIN.txt
+server.mjs
