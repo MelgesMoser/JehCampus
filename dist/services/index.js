@@ -12,7 +12,7 @@ export async function initializeData() {
     throw new Error("Não foi possível consultar a configuração do servidor.");
   const config = await response.json();
   connectionState.mode = config.mode;
-  if (["mongodb", "dataconnect"].includes(config.mode)) {
+  if (["mongodb", "dataconnect", "file"].includes(config.mode)) {
     api = new RemoteServices(connectionState);
     await api.refresh(true);
     api.startSync();

@@ -91,7 +91,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === filename) {
       console.log(
         config.mode === "mongodb"
           ? "Armazenamento: MongoDB. Conexão validada ao carregar os dados."
-          : "Armazenamento: demonstração local.",
+          : config.mode === "file"
+            ? "Armazenamento: banco local persistente com autenticação."
+            : "Armazenamento: demonstração local.",
       );
     });
     process.on("SIGINT", () =>

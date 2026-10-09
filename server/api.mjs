@@ -125,7 +125,7 @@ export function createApi({ config, getRepository }) {
         });
         return true;
       }
-      if (!["mongodb", "dataconnect"].includes(config.mode))
+      if (!["mongodb", "dataconnect", "file"].includes(config.mode))
         throw new HttpError(
           503,
           "O banco compartilhado ainda não está ativado.",

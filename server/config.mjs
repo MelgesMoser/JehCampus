@@ -3,10 +3,13 @@ import { fileURLToPath } from "node:url";
 
 export function loadConfig(env = process.env) {
   const mode = env.DATA_MODE || "local";
-  if (!["local", "mongodb", "dataconnect"].includes(mode))
-    throw new Error("DATA_MODE deve ser local, mongodb ou dataconnect.");
+  if (!["local", "file", "mongodb", "dataconnect"].includes(mode))
+    throw new Error("DATA_MODE deve ser local, file, mongodb ou dataconnect.");
   const config = {
     mode,
+    localDatabase: fileURLToPath(
+      new URL("../.run/local-database.json", import.meta.url),
+    ),
     host: env.HOST || "127.0.0.1",
     port: Number(env.PORT || 4173),
     origin: env.PUBLIC_ORIGIN || "",
@@ -30,6 +33,10 @@ export function loadConfig(env = process.env) {
         "Defina ADMIN_PASSWORD com pelo menos 12 caracteres no arquivo .env.",
       );
   }
+  if (mode === "file" && env.VERCEL)
+    throw new Error(
+      "Na Vercel, utilize MongoDB; o disco local não é persistente.",
+    );
   if (mode === "dataconnect") {
     config.firebaseProject = env.FIREBASE_PROJECT_ID;
     config.dataConnectLocation = env.DATA_CONNECT_LOCATION;

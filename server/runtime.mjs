@@ -1,3 +1,4 @@
+import { FileRepository } from "./fileRepository.mjs";
 import { MongoRepository } from "./mongoRepository.mjs";
 import { DataConnectRepository } from "./dataConnectRepository.mjs";
 export function createRuntime(config) {
@@ -11,9 +12,11 @@ export function createRuntime(config) {
         throw new Error("Aguardando reconexão.");
       if (!connection) {
         const candidate =
-          config.mode === "dataconnect"
-            ? new DataConnectRepository(config)
-            : new MongoRepository(config);
+          config.mode === "file"
+            ? new FileRepository(config)
+            : config.mode === "dataconnect"
+              ? new DataConnectRepository(config)
+              : new MongoRepository(config);
         connection = candidate
           .connect()
           .then((connected) => {

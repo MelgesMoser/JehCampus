@@ -56,7 +56,13 @@ async function belongsToProject(pid) {
       : spawnSync("ps", ["-p", String(pid), "-o", "args="], {
           encoding: "utf8",
         });
-  return result.status === 0 && result.stdout.includes(serverFile);
+  return (
+    result.status === 0 &&
+    result.stdout
+      .normalize("NFC")
+      .toLowerCase()
+      .includes(serverFile.normalize("NFC").toLowerCase())
+  );
 }
 
 async function stop(config) {
@@ -176,7 +182,9 @@ async function start(config) {
       console.log(`Painel: http://127.0.0.1:${config.port}/admin`);
       console.log(
         config.mode !== "local"
-          ? "Modo banco compartilhado. Use seu usuário e senha do painel."
+          ? config.mode === "file"
+            ? "Banco local persistente. Use seu usuário e senha do painel."
+            : "Modo banco compartilhado. Use seu usuário e senha do painel."
           : "Modo demonstração local. Seus dados anteriores foram mantidos.",
       );
       return;

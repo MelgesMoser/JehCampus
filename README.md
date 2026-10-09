@@ -1,3 +1,9 @@
+## Execução local — 09/10/2026
+
+Neste computador, DATA_MODE=file utiliza um banco persistente em .run/local-database.json. O login de administradores e clientes, cadastro de novos administradores, serviços, bloqueios e reservas passam pelo servidor. Abra Iniciar.cmd; para parar ou reiniciar, utilize Parar.cmd ou Reiniciar.cmd. Acesso: http://127.0.0.1:4173/admin. Usuário e senha ficam no arquivo privado .run/ACESSO-ADMIN.txt.
+
+Faça backup da pasta .run para preservar banco e acessos. O modo file é destinado a uma única instância local do servidor e não sincroniza com o Atlas. A configuração MongoDB foi preservada no .env; para voltar ao Atlas, altere DATA_MODE=mongodb após resolver a rede e substituir a credencial exposta anteriormente. A função da Vercel continua usando exclusivamente MongoDB.
+
 ## Atualização de 08/10/2026 — Vercel, administradores e múltiplos serviços
 
 - A reserva aceita um ou mais serviços, somando valor e duração no servidor e verificando o intervalo completo em transação MongoDB.

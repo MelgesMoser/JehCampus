@@ -1,3 +1,4 @@
+import { FileRepository } from "../server/fileRepository.mjs";
 import { MongoClient } from "mongodb";
 import { loadEnvironment, loadConfig } from "../server/config.mjs";
 import { DataConnectRepository } from "../server/dataConnectRepository.mjs";
@@ -8,7 +9,12 @@ try {
   const config = loadConfig();
   if (config.mode === "local")
     throw new Error("DATA_MODE=local. Configure um banco remoto no .env.");
-  if (config.mode === "dataconnect") {
+  if (config.mode === "file") {
+    const repository=await new FileRepository(config).connect();
+    const state=await repository.snapshot();
+    console.log(`Banco local acessível: ${state.services.length} serviços. Dados persistidos no computador.`);
+    await repository.close();
+  } else if (config.mode === "dataconnect") {
     const repository = new DataConnectRepository(config);
     const snapshot = await repository.snapshot();
     console.log(
